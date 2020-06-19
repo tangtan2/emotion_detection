@@ -2,6 +2,9 @@
 .idea
 venv
 *.iml
-*.csv
 *.png
 *.tif
+*.hdf5
+*.jpg
+*.ipynb_checkpoints
+*__pycache__

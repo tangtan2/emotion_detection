@@ -1,3 +1,4 @@
+import numpy as np
 import os
 import json
 import cv2
@@ -23,6 +24,7 @@ if __name__ == '__main__':
                          6: 'neutral'}
 
     # prepare FER images
+    print('[INFO] preparing FER images...')
     fer_csv = FER + '/fer.csv'
     header = True
     for line in open(fer_csv):
@@ -30,16 +32,22 @@ if __name__ == '__main__':
             header = False
             continue
         split = line.split(',')
-        image = [int(pixel) for pixel in split[1].split()]
+        image = np.array([int(pixel) for pixel in split[1].split(' ')])
+        image = image.reshape((48, 48)).astype(np.uint8)
         images.append(image)
         image_id = 'fer_' + split[0] + '_' + str(len(images)) + '.png'
         image_ids.append(image_id)
+        image_props[image_id] = {}
         image_props[image_id]['label'] = split[0]
         image_props[image_id]['num'] = str(len(images) - 1)
         image_props[image_id]['emotion'] = labels_to_emotion[int(split[0])]
         image_props[image_id]['database'] = 'fer'
+        if len(images) % 1000 == 0:
+            print(f'[INFO] prepared {len(images)} images...')
+    print('[INFO] FER images complete.')
 
     # prepare CK images
+    print('[INFO] preparing CK images...')
     ckit = 1
     folders = ['anger', 'disgust', 'fear', 'happy', 'sadness', 'surprise']
     for i, folder in enumerate(folders):
@@ -49,12 +57,15 @@ if __name__ == '__main__':
             images.append(image)
             image_id = 'ck_' + str(i) + '_' + str(len(images)) + '.png'
             image_ids.append(image_id)
+            image_props[image_id] = {}
             image_props[image_id]['label'] = str(i)
             image_props[image_id]['num'] = str(len(images) - 1)
             image_props[image_id]['emotion'] = labels_to_emotion[i]
             image_props[image_id]['database'] = 'ck'
+    print('[INFO] CK images complete.')
 
     # prepare VISGRAF images
+    print('[INFO] preparing VISGRAF images...')
     emotions = ['04', '05', '06', '01', '02', '03', '00']
     subjects = ['s001', 's002', 's003', 's004', 's005', 's006', 's007', 's008', 's009', 's010',
                 's011', 's012', 's012', 's013', 's014', 's015', 's016', 's017', 's018', 's019',
@@ -65,16 +76,19 @@ if __name__ == '__main__':
             file_path = VISGRAF + '/' + subject + '/tif/' + subject + '-' + emotion + '_img.tif'
             image = cv2.imread(file_path)
             images.append(image)
-            image_id = 'visgraf' + str(i) + '_' + str(len(images)) + '.png'
+            image_id = 'visgraf_' + str(i) + '_' + str(len(images)) + '.png'
             image_ids.append(image_id)
+            image_props[image_id] = {}
             image_props[image_id]['label'] = str(i)
             image_props[image_id]['num'] = str(len(images) - 1)
             image_props[image_id]['emotion'] = labels_to_emotion[i]
             image_props[image_id]['database'] = 'visgraf'
+    print('[INFO] VISGRAF images complete.')
 
     # save images to one folder and save image properties dictionary as json
     os.mkdir(TARGET)
     for i, image in enumerate(images):
-        cv2.imwrite(TARGET + '/' + image_ids[i], image)
+        cv2.imwrite(TARGET + '/images/' + image_ids[i], image)
     with open(TARGET + '/image_props.json', 'w') as f:
         json.dump(image_props, f, indent=4)
+    print('[INFO] images saved.')

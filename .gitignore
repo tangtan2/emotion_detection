@@ -8,3 +8,4 @@ venv
 *.jpg
 *.ipynb_checkpoints
 *__pycache__
+*.pptx
